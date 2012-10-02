@@ -1,69 +1,52 @@
-sql --> subquery_factoring_clause, subquery, for_update_clause, [;].
+query(query(SP,SLP,FP,TRP)) --> select_block(SP), select_list(SLP), from(FP), table_reference(TRP).
+query(query(SP,SLP,FP,TRP, WC)) --> select_block(SP), select_list(SLP), from(FP), table_reference(TRP), where_clause(WC).
+query(query(SP,SLP,FP,TRP, WC, GC)) --> select_block(SP), select_list(SLP), from(FP), table_reference(TRP), where_clause(WC), group_by_clause(GC).
+query(query(SP,SLP,FP,TRP, GC)) --> select_block(SP), select_list(SLP), from(FP), table_reference(TRP), group_by_clause(GC).
 
-subquery --> query_block, order_by_clause. 
-subquery --> subquery, un_int_min, subquery, order_by_clause.
-subquery --> [(], subquery, [)], order_by_clause.
+select_block(select_block('select')) --> ['select'].
+select_block(select_block('SELECT')) --> ['SELECT'].
 
-union_all --> [union], [all].
-union_all --> [union].
+select_list(select_list('*')) --> ['*'].
 
-un_int_min --> union_all.
-un_int_min --> [intersect].
-un_int_min --> [minus].
+from(from('from')) --> ['from'].
+from(from('FROM')) --> ['FROM'].
 
-query_block --> [select], query_hint, all_distinct_unique, select_list, [from], 
-	multiple_from_clause, where_clause, hierarchical_query_clause, group_by_clause,
-	having_clause, model_clause. 
+table_reference(table_reference(TA)) --> [TA].
+table_reference(table_reference(JC)) --> join_clause(JC).
+table_reference(table_reference('(', JC, ')')) --> ['('], join_clause(JC), [')'].
 
-where_clause --> [].
-where_clause --> where_c.
+join_clause(join_clause(TA, 'inner join', TB, 'on', CONDITION)) --> [TA], ['inner join'], {!},[TB], ['on'], condition(CONDITION).
+join_clause(join_clause(TA, 'outer join', TB, 'on', CONDITION)) --> [TA], ['outer join'], {!}, [TB], ['on'], condition(CONDITION).
+join_clause(join_clause(TA, 'join', TB, 'on', CONDITION)) --> [TA], ['join'], [TB], ['on'], condition(CONDITION).
 
-hierarchical_query_clause --> [].
-hierarchical_query_clause --> hierarchical_query_c.
+where_clause(where_clause('where', CONDITION)) --> ['where'], condition(CONDITION).
+where_clause(where_clause('WHERE', CONDITION)) --> ['WHERE'], condition(CONDITION).
 
-group_by_clause --> [].
-group_by_clause --> group_by_c.
+group_by_clause(group_by_clause('group by', EXPR)) --> ['group by'], expr(EXPR).
+group_by_clause(group_by_clause('GROUP BY', EXPR)) --> ['GROUP BY'], expr(EXPR).
 
-having_clause --> [].
-having_clause --> having_c.
+condition(condition(L, OP, R)) --> [L], operator(OP), [R].
+condition(condition(L, OP, R, LOGOP, COND_REST)) --> [L], operator(OP), [R], logical_operator(LOGOP), condition(COND_REST).
 
-model_clause --> [].
-model_clause --> model_c.
+operator(op('=')) --> ['='].
+operator(op('>=')) --> ['>='].
+operator(op('<=')) --> ['<='].
+operator(op('<')) --> ['<'].
+operator(op('>')) --> ['>'].
+operator(op('!=')) --> ['!='].
+operator(op('<>')) --> ['<>'].
 
-query_hint --> hint.
-query_hint --> [].
+logical_operator(logop('AND')) --> ['AND'].
+logical_operator(logop('and')) --> ['and'].
+logical_operator(logop('OR')) --> ['OR'].
+logical_operator(logop('or')) --> ['or'].
 
-all_distinct_unique --> [all].
-all_distinct_unique --> [distinct].
-all_distinct_unique --> [unique].
+expr(expr(E)) --> logical_operator(E), {!, fail}.
+expr(expr(E)) --> operator(E), {!, fail}.
+expr(expr(E)) --> [E].
 
-multiple_from_clause --> from_clause.
-multiple_from_clause --> from_clause, [,], from_clause.
-
-from_clause --> table_reference.
-from_clause --> join_clause.
-from_clause --> [(], join_clause, [)].
-
-subquery_factoring_clause --> [with], multi_query_name.
-multi_query_name --> query_name, [as], [(], subquery, [)].
-
-select_list --> [*].
-select_list --> multi_select_list.
-
-multi_select_list --> sub_multi_select_list.
-multi_select_list --> sub_multi_select_list, [,], sub_multi_select_list.
-
-sub_multi_select_list --> regular_sub_multi_select_list.
-sub_multi_select_list --> expr_sub_multi_select_list.
-
-regular_sub_multi_select_list --> sub_regular_sub_multi_select_list, [.*].
-
-sub_regular_sub_multi_select_list --> query_name.
-sub_regular_sub_multi_select_list --> schema_clause, table_clause.
-
-schema_clause --> [].
-schema_clause --> schema_c.
-
-table_clause --> table_c.
-table_clause --> view_clause.
-table_clause --> mat_view_clause.
+%tests
+%query(Tree, ['select', '*', 'from', 'a', 'where', 'col1', '=', '1', 'and', 'col2', '=', '2'], []).
+%query(Tree, ['select', '*', 'from', 'a', 'where', 'col1', '=', '1'], []).
+%query(Tree, ['select', '*', 'from', 'a'], []).
+%query(Tree, ['select', '*', 'from', 'a', 'group by', 'col1'], []).
