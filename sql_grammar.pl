@@ -5,15 +5,15 @@ select(select_node(S)) --> subquery(S).
 subquery(subquery_node(SQ)) --> { write('subquery1\n')},query_block(SQ).
 subquery(subquery_node(SQ, OB)) --> { write('subquery2\n')},query_block(SQ), top_order_by_clause(OB).
 subquery(subquery_node(SQL, 'UNION', SQR)) --> { write('subquery3\n')},subquery(SQL), ['UNION'], subquery(SQR).
-%subquery(subquery_node(SQL, 'UNION', SQR, OB)) --> subquery(SQL), ['UNION'], subquery(SQR), top_order_by_clause(OB).
+subquery(subquery_node(SQL, 'UNION', SQR, OB)) --> subquery(SQL), ['UNION'], subquery(SQR), top_order_by_clause(OB).
 subquery(subquery_node(SQL, 'UNION', 'ALL', SQR)) --> { write('subquery4\n')},subquery(SQL), ['UNION'], ['ALL'], subquery(SQR).
-%subquery(subquery_node(SQL, 'UNION', 'ALL', SQR, OB)) --> subquery(SQL), ['UNION'], ['ALL'], subquery(SQR), top_order_by_clause(OB).
+subquery(subquery_node(SQL, 'UNION', 'ALL', SQR, OB)) --> subquery(SQL), ['UNION'], ['ALL'], subquery(SQR), top_order_by_clause(OB).
 subquery(subquery_node(SQL, 'INTERSECT', SQR)) --> { write('subquery5\n')},subquery(SQL), ['INTERSECT'], subquery(SQR).
-%subquery(subquery_node(SQL, 'INTERSECT', SQR, OB)) --> subquery(SQL), ['INTERSECT'], subquery(SQR), top_order_by_clause(OB).
+subquery(subquery_node(SQL, 'INTERSECT', SQR, OB)) --> subquery(SQL), ['INTERSECT'], subquery(SQR), top_order_by_clause(OB).
 subquery(subquery_node(SQL, 'MINUS', SQR)) --> { write('subquery6\n')},subquery(SQL), ['MINUS'], subquery(SQR).
-%subquery(subquery_node(SQL, 'MINUS', SQR, OB)) --> subquery(SQL), ['MINUS'], subquery(SQR), top_order_by_clause(OB).
+subquery(subquery_node(SQL, 'MINUS', SQR, OB)) --> subquery(SQL), ['MINUS'], subquery(SQR), top_order_by_clause(OB).
 subquery(subquery_node('(', SQ, ')')) --> ['('], { write('subquery7\n')},subquery(SQ), [')'].
-%subquery(subquery_node('(', SQ, ')', OB)) --> ['('], subquery(SQ), [')'], top_order_by_clause(OB).
+subquery(subquery_node('(', SQ, ')', OB)) --> ['('], subquery(SQ), [')'], top_order_by_clause(OB).
 
 query_block(query_block_node(SP,SLP,FP,TRP)) --> {write('query_block1\n')}, select_block(SP), select_list(SLP), from(FP), table_reference(TRP).
 query_block(query_block_node(SP,SLP,FP,TRP,WC)) --> {write('query_block2\n')},select_block(SP), select_list(SLP), from(FP), table_reference(TRP), where_clause(WC).
