@@ -32,16 +32,18 @@ select_list(select_list_node(S)) --> select_item(S).
 %select_list(select_list_node(SELECT_TERM, ',', REST)) --> [SELECT_TERM], [','], select_list(REST).
 select_list(select_list_node(SELECT_ITEM, ',', REST)) --> select_item(SELECT_ITEM), [','], select_list(REST).
 
-select_item(select_item_node('*')) --> ['*'].
-select_item(select_item_node(SELECT_TERM, 'as', ALIAS)) --> [SELECT_TERM], ['as'], [ALIAS].
 select_item(select_item_node(SELECT_TERM)) --> [SELECT_TERM].
+select_item(select_item_node(SELECT_TERM, 'as', ALIAS)) --> [SELECT_TERM], ['as'], [ALIAS].
 
 from(from_kw('from')) --> ['from'].
 
 table_reference(table_reference_node('(', SQ, ')')) --> ['('], select(SQ), [')'].
 table_reference(table_reference_node('(', JC, ')')) --> ['('], join_clause(JC), [')'].
-table_reference(table_reference_node(TA)) --> [TA].
+table_reference(table_reference_node(TA)) --> maybe_aliased_expr(TA).
+table_reference(table_reference_node(JC)) --> simple_join_clause(JC).
 table_reference(table_reference_node(JC)) --> join_clause(JC).
+
+simple_join_clause(simple_join_clause_node(TA, ',', TB)) --> maybe_aliased_expr(TA), [','], maybe_aliased_expr(TB).
 
 join_clause(join_clause_node(TA, 'inner join', TB, 'on', CONDITION)) --> [TA], ['inner join'], [TB], ['on'], condition(CONDITION).
 join_clause(join_clause_node(TA, 'outer join', TB, 'on', CONDITION)) --> [TA], ['outer join'], [TB], ['on'], condition(CONDITION).
@@ -58,7 +60,7 @@ group_by_clause(group_by_clause_node('group by', EXPR, HC)) --> ['group by'], ex
 
 having_clause(having_clause_node(CONDITION)) --> condition(CONDITION).
 
-top_order_by_clause(top_order_by_clause_node('order by', REST)) --> ['order by'], order_by_clause(REST).
+top_order_by_clause(top_order_by_clause_node('order', 'by', REST)) --> ['order'], ['by'], order_by_clause(REST).
 
 order_by_clause(order_by_clause_node(EXPR, 'asc')) --> expr(EXPR).
 order_by_clause(order_by_clause_node(EXPR, 'asc', ',', REST)) --> expr(EXPR), [','], order_by_clause(REST).
@@ -82,6 +84,10 @@ operator(op('<>')) --> ['<>'].
 
 logical_operator(logop('and')) --> ['and'].
 logical_operator(logop('or')) --> ['or'].
+
+maybe_aliased_expr(maybe_aliased_expr(E, 'as', ALIAS)) --> [E], ['as'], [ALIAS], {ALIAS \= ','}.
+maybe_aliased_expr(maybe_aliased_expr(E, ALIAS)) --> [E], [ALIAS], {ALIAS \= ','}.
+maybe_aliased_expr(maybe_aliased_expr(E)) --> [E].
 
 expr(expr(E)) --> logical_operator(E), {!, fail}.
 expr(expr(E)) --> operator(E), {!, fail}.
@@ -108,3 +114,4 @@ expr(expr(E)) --> [E].
 %select(Tree, ['select', '*', 'from', 'a', 'order by', 'col1', ',', 'col2', 'asc'], []).
 %top_order_by_clause(Tree, ['order by', 'col1', ',', 'col2', 'asc'], []).
 %select(Tree, ['select', '*', 'from', '(', 'select', '*', 'from', 'a', ')'], []).
+%select(Tree, ['select', 'tsur.icompany,', 'tsur.inflight,', 'tleg.idepflight,', 'tsur.iboardpnt,', 'tsur.ioffpoint,', 'tsur.icabin,', 'tsur.irbd,', '0', 'as', 'subclass,', 'tsur.qshowup,', '0', 'as', 'etb', 'from', 'tbmzsleg', 'tleg,', 'tbmzssur', 'tsur', 'where', 'tsur.icompany', '=', 'tleg.icompany', 'and', 'tsur.inflight', '=', 'tleg.inflight', 'and', 'tsur.ideparture', '=', 'tleg.edeparture', 'and', 'tsur.iboardpnt', '=', 'tleg.eboardpnt', 'and', 'tsur.ioffpoint', '=', 'tleg.eoffpoint', 'and', 'trunc(tleg.edeparture)', '>=', 'trunc(sysdate)', 'and', 'trunc(tleg.edeparture)', '<=', 'trunc(sysdate)+1', 'order', 'by', 'tsur.icompany,', 'tsur.inflight,', 'tsur.ideparture,', 'tsur.iboardpnt,', 'tsur.ioffpoint,', 'tsur.icabin,', 'tsur.irbd'], []).
